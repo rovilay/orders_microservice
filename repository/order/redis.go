@@ -35,7 +35,7 @@ func (r *RedisRepo) Insert(ctx context.Context, order model.Order) error {
 	}
 
 	// add order sets to manage order creation order/sequence
-	if err := txn.SAdd(ctx, "orders", key); err != nil {
+	if err := txn.SAdd(ctx, "orders", key).Err(); err != nil {
 		txn.Discard()
 		return fmt.Errorf("failed to add to orders set: %w", err)
 	}
@@ -103,7 +103,7 @@ func (r *RedisRepo) Update(ctx context.Context, order model.Order) error {
 
 	key := orderIDKey(order.OrderID)
 
-	res := r.Client.SetNX(ctx, key, string(data), 0)
+	res := r.Client.SetXX(ctx, key, string(data), 0)
 	if err := res.Err(); err != nil {
 		return fmt.Errorf("failed to set: %w", err)
 	}
